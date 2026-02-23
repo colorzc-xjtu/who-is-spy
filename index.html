@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0d1117">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>谁是卧底 - 聚会推理游戏</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🕵</text></svg>">
+</head>
+<body>
+
+  <!-- ========== Screen: Home ========== -->
+  <section id="screen-home" class="screen screen-active">
+    <div class="home-container">
+      <div class="home-logo">🕵</div>
+      <h1 class="home-title">谁是卧底</h1>
+      <p class="home-subtitle">经典聚会推理游戏</p>
+      <div class="home-actions">
+        <button class="btn btn-primary btn-lg" id="btn-start">开始游戏</button>
+        <button class="btn btn-ghost" id="btn-rules">游戏规则</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== Screen: Setup ========== -->
+  <section id="screen-setup" class="screen">
+    <div class="top-bar">
+      <button class="btn-back" id="setup-back">←</button>
+      <span class="top-bar-title">游戏设置</span>
+    </div>
+
+    <div class="setup-content">
+      <!-- Player Count -->
+      <div class="setup-section">
+        <div class="setup-section-title">人数设置</div>
+        <div class="stepper" id="stepper-players">
+          <span class="stepper-label">玩家人数</span>
+          <div class="stepper-controls">
+            <button class="stepper-btn stepper-minus" aria-label="减少">−</button>
+            <span class="stepper-value">6</span>
+            <button class="stepper-btn stepper-plus" aria-label="增加">+</button>
+          </div>
+        </div>
+        <div class="stepper" id="stepper-spies">
+          <span class="stepper-label">卧底人数</span>
+          <div class="stepper-controls">
+            <button class="stepper-btn stepper-minus" aria-label="减少">−</button>
+            <span class="stepper-value">1</span>
+            <button class="stepper-btn stepper-plus" aria-label="增加">+</button>
+          </div>
+        </div>
+        <div class="stepper" id="stepper-blanks">
+          <span class="stepper-label">白板人数</span>
+          <div class="stepper-controls">
+            <button class="stepper-btn stepper-minus" aria-label="减少">−</button>
+            <span class="stepper-value">0</span>
+            <button class="stepper-btn stepper-plus" aria-label="增加">+</button>
+          </div>
+        </div>
+        <div class="validation-msg" id="validation-msg"></div>
+      </div>
+
+      <!-- Word Category -->
+      <div class="setup-section">
+        <div class="setup-section-title">词语分类</div>
+        <div class="category-pills" id="category-pills">
+          <button class="category-pill active" data-category="random">🎲 随机</button>
+          <!-- Categories populated by JS -->
+        </div>
+      </div>
+
+      <!-- Custom Words -->
+      <div class="setup-section">
+        <label class="custom-word-toggle" id="custom-toggle">
+          <div class="toggle-switch" id="toggle-switch"></div>
+          <span>使用自定义词语</span>
+        </label>
+        <div class="custom-inputs" id="custom-inputs">
+          <input class="custom-input" id="input-civilian" type="text" placeholder="平民词语" maxlength="20">
+          <input class="custom-input" id="input-spy" type="text" placeholder="卧底词语" maxlength="20">
+        </div>
+      </div>
+
+      <!-- Start Button -->
+      <div class="setup-footer">
+        <button class="btn btn-primary btn-lg" id="btn-deal" style="width:100%">开始发牌</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== Screen: Reveal ========== -->
+  <section id="screen-reveal" class="screen">
+    <div class="reveal-container">
+      <div class="reveal-progress" id="reveal-progress">1 / 6</div>
+
+      <div class="reveal-card-wrapper">
+        <div class="reveal-card" id="reveal-card">
+          <!-- Front: tap to view -->
+          <div class="reveal-front" id="reveal-front">
+            <div class="pulse-ring">
+              <span class="reveal-front-icon">🔒</span>
+            </div>
+            <div class="reveal-front-player" id="reveal-player-label">玩家 1</div>
+            <div class="reveal-front-hint" id="reveal-front-hint">点击卡牌查看身份</div>
+          </div>
+          <!-- Back: word revealed -->
+          <div class="reveal-back" id="reveal-back">
+            <div class="reveal-role-badge" id="reveal-role-badge">平民</div>
+            <div class="reveal-word" id="reveal-word">苹果</div>
+            <div class="reveal-blank-text hidden" id="reveal-blank-text">你是白板，没有词语</div>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn btn-primary hidden" id="btn-next-player">知道了，传给下一位</button>
+      <button class="btn btn-primary hidden" id="btn-start-game">所有人已查看，开始游戏</button>
+    </div>
+  </section>
+
+  <!-- ========== Screen: Game ========== -->
+  <section id="screen-game" class="screen">
+    <div class="game-content">
+      <div class="game-header">
+        <span class="top-bar-title">游戏进行中</span>
+        <span class="round-badge" id="round-badge">第 1 轮</span>
+      </div>
+
+      <!-- Player Grid -->
+      <div class="player-grid" id="player-grid">
+        <!-- Populated by JS -->
+      </div>
+
+      <!-- Timer -->
+      <div class="timer-section">
+        <div class="timer-display" id="timer-display">2:00</div>
+        <div class="timer-presets" id="timer-presets">
+          <button class="timer-preset" data-seconds="60">1分钟</button>
+          <button class="timer-preset active" data-seconds="120">2分钟</button>
+          <button class="timer-preset" data-seconds="180">3分钟</button>
+          <button class="timer-preset" data-seconds="300">5分钟</button>
+        </div>
+        <div class="timer-controls">
+          <button class="btn btn-sm btn-ghost" id="btn-timer-toggle">开始计时</button>
+          <button class="btn btn-sm btn-ghost" id="btn-timer-reset">重置</button>
+        </div>
+      </div>
+
+      <!-- Game Actions -->
+      <div class="game-actions">
+        <div class="game-actions-row">
+          <button class="btn btn-ghost btn-sm" id="btn-review">重新查看身份</button>
+          <button class="btn btn-ghost btn-sm" id="btn-next-round">下一轮</button>
+        </div>
+        <button class="btn btn-danger btn-sm" id="btn-reveal-all">公布答案</button>
+        <button class="btn btn-ghost btn-sm" id="btn-new-game">再来一局</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== Screen: Result ========== -->
+  <section id="screen-result" class="screen">
+    <div class="result-content">
+      <div class="top-bar">
+        <span class="top-bar-title">游戏结束</span>
+      </div>
+
+      <div class="result-words" id="result-words">
+        <!-- Populated by JS -->
+      </div>
+
+      <div class="result-players" id="result-players">
+        <!-- Populated by JS -->
+      </div>
+
+      <div class="result-actions">
+        <button class="btn btn-primary" id="btn-play-again">再来一局</button>
+        <button class="btn btn-ghost" id="btn-go-home">返回首页</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== Modal: Rules ========== -->
+  <div class="modal" id="modal-rules">
+    <div class="modal-backdrop" id="rules-backdrop"></div>
+    <div class="modal-content">
+      <div class="modal-title">游戏规则</div>
+      <div class="modal-body">
+        <h3>角色分配</h3>
+        <p>游戏开始后，每位玩家会被随机分配一个身份：<strong>平民</strong>、<strong>卧底</strong>或<strong>白板</strong>。</p>
+        <p>平民拿到相同的词语，卧底拿到一个相似但不同的词语，白板没有词语。</p>
+
+        <h3>游戏流程</h3>
+        <p>1. 每人查看自己的词语后，轮流用一句话描述自己的词（不能直接说出词语）。</p>
+        <p>2. 一轮描述结束后，所有人投票选出最可疑的人。</p>
+        <p>3. 得票最多的人出局，并可选择猜测卧底词。</p>
+        <p>4. 重复以上步骤直到游戏结束。</p>
+
+        <h3>胜负判定</h3>
+        <p><strong>平民胜利：</strong>找出所有卧底。</p>
+        <p><strong>卧底胜利：</strong>存活到最后，或在被淘汰时猜对平民词。</p>
+        <p><strong>白板胜利：</strong>在第一轮投票中被淘汰，并猜对卧底词。</p>
+
+        <h3>小技巧</h3>
+        <p>描述时既不能太具体（暴露自己），也不能太模糊（被怀疑为卧底）。</p>
+      </div>
+      <button class="btn btn-ghost modal-close" id="btn-close-rules">知道了</button>
+    </div>
+  </div>
+
+  <!-- ========== Modal: Confirm ========== -->
+  <div class="modal" id="modal-confirm">
+    <div class="modal-backdrop" id="confirm-backdrop"></div>
+    <div class="modal-content">
+      <div class="modal-title" id="confirm-title">确认</div>
+      <div class="modal-body" id="confirm-body">确定要执行此操作吗？</div>
+      <div class="confirm-actions">
+        <button class="btn btn-ghost" id="btn-confirm-cancel">取消</button>
+        <button class="btn btn-primary" id="btn-confirm-ok">确定</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== Modal: Review (re-view word during game) ========== -->
+  <div class="modal" id="modal-review">
+    <div class="modal-backdrop" id="review-backdrop"></div>
+    <div class="modal-content text-center">
+      <div class="modal-title">选择要查看的玩家</div>
+      <div class="player-grid" id="review-player-grid" style="margin-bottom:16px">
+        <!-- Populated by JS -->
+      </div>
+      <button class="btn btn-ghost modal-close" id="btn-close-review">取消</button>
+    </div>
+  </div>
+
+  <!-- ========== Modal: Review Reveal ========== -->
+  <div class="modal" id="modal-review-reveal">
+    <div class="modal-backdrop" id="review-reveal-backdrop"></div>
+    <div class="modal-content text-center">
+      <div class="modal-title" id="review-reveal-title">玩家 1 的身份</div>
+      <p style="margin-bottom: 12px; color: var(--text-secondary);">点击下方按钮查看</p>
+      <button class="btn btn-primary" id="btn-review-show" style="width:100%">点击查看</button>
+      <div class="hidden" id="review-reveal-info" style="margin-top:16px">
+        <div class="reveal-role-badge" id="review-role-badge" style="display:inline-block;margin-bottom:12px">平民</div>
+        <div class="reveal-word" id="review-word">苹果</div>
+        <div class="reveal-blank-text hidden" id="review-blank-text">你是白板，没有词语</div>
+      </div>
+      <button class="btn btn-ghost modal-close" id="btn-close-review-reveal" style="margin-top:16px;width:100%">关闭</button>
+    </div>
+  </div>
+
+  <!-- ========== Toast Container ========== -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- ========== Theme Toggle (global) ========== -->
+  <button class="theme-toggle" id="btn-theme" aria-label="切换主题">🌙</button>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
